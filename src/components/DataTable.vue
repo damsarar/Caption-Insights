@@ -5,6 +5,8 @@
       item-key="imageId"
       class="elevation-1 m-5"
       :items-per-page="10"
+      :loading="loading"
+      loading-text="Loading... Please wait"
   >
     <template v-slot:top>
       <v-toolbar flat>
@@ -17,7 +19,7 @@
 <script>
 export default {
   name: "DataTable",
-  props: ['title', 'dataObject', 'headers'],
+  props: ['title', 'dataObject', 'headers', 'loading'],
   data() {
     return {
       singleExpand: false,

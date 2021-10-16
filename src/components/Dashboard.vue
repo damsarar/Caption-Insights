@@ -1,18 +1,14 @@
 <template>
   <v-app id="inspire">
-    <v-app-bar
-        app
-        color="primary"
-        dark
-        flat
-    >
+    <v-app-bar app color="primary" dark flat>
       <v-container class="py-0 fill-height">
-        <h3 class="mr-10">Caption Insights</h3>
+        <h3 class="mr-10">Sinhala Caption Tagger Insights</h3>
       </v-container>
     </v-app-bar>
 
     <v-main class="grey lighten-3">
       <v-container>
+        <!-- Stat cards -->
         <v-row class="mt-1">
           <v-col cols="6" md="2">
             <v-sheet rounded="lg">
@@ -35,27 +31,21 @@
             </v-sheet>
           </v-col>
         </v-row>
+
+        <!-- Data tables -->
         <v-row>
           <v-col>
-            <v-sheet
-                height="100%"
-                width="100%"
-                rounded="lg"
-            >
+            <v-sheet height="100%" width="100%" rounded="lg">
               <data-table title="New Captions" :dataObject="allNewCaptions"
-                          :headers="newCaptionTableHeaders"></data-table>
+                          :headers="newCaptionTableHeaders" :loading="newCaptionTableLoading"></data-table>
             </v-sheet>
           </v-col>
         </v-row>
         <v-row>
           <v-col>
-            <v-sheet
-                height="100%"
-                width="100%"
-                rounded="lg"
-            >
+            <v-sheet height="100%" width="100%" rounded="lg">
               <data-table title="Corrected Captions" :dataObject="allCorrectedCaptions"
-                          :headers="correctedCaptionTableHeaders"></data-table>
+                          :headers="correctedCaptionTableHeaders" :loading="correctedCaptionTableLoading"></data-table>
             </v-sheet>
           </v-col>
         </v-row>
@@ -76,6 +66,8 @@ export default {
     allCorrectedCaptions: [],
     noOfNewCaptions: 0,
     noOfCorrectedCaptions: 0,
+    newCaptionTableLoading: false,
+    correctedCaptionTableLoading: false,
     newCaptionTableHeaders: [
       {text: 'Image Id', value: 'imageId'},
       {text: 'Image Name', value: 'imageFileName'},
@@ -100,7 +92,9 @@ export default {
     this.getCorrectedCaptionData();
   },
   methods: {
+    // to get collected new caption data
     async getNewCaptionData() {
+      this.newCaptionTableLoading = true;
       let tempObj;
       db.collection('Images').get()
           .then((snapshot) => {
@@ -122,13 +116,17 @@ export default {
               }
             });
             this.noOfNewCaptions = this.allNewCaptions.length;
+            this.newCaptionTableLoading = false;
           })
           .catch((err) => {
             console.log("Error getting documents", err);
-            this.loaderOverlay = false;
+            this.newCaptionTableLoading = false;
           });
     },
+
+    // to get corrected caption data
     async getCorrectedCaptionData() {
+      this.correctedCaptionTableLoading = true;
       let tempObj;
       db.collection('CorrectedCaptions').get()
           .then((snapshot) => {
@@ -150,14 +148,14 @@ export default {
               }
             });
             this.noOfCorrectedCaptions = this.allCorrectedCaptions.length;
+            this.correctedCaptionTableLoading = false;
           })
           .catch((err) => {
             console.log("Error getting documents", err);
-            this.loaderOverlay = false;
+            this.correctedCaptionTableLoading = false;
           });
     }
   },
-
 };
 </script>
 
