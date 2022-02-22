@@ -14,8 +14,48 @@
             <v-sheet rounded="lg">
               <v-card height="150" class="mx-auto">
                 <v-card-text>
-                  <p class="text-h5"> New captions </p>
-                  <p class="text-h4 text--primary">{{ noOfNewCaptions }}</p>
+                  <p class="text-h5"> Caption 1 </p>
+                  <p class="text-h4 text--primary">{{ noOfCaptions.caption1 }}</p>
+                </v-card-text>
+              </v-card>
+            </v-sheet>
+          </v-col>
+          <v-col cols="6" md="2">
+            <v-sheet rounded="lg">
+              <v-card height="150" class="mx-auto">
+                <v-card-text>
+                  <p class="text-h5"> Caption 2 </p>
+                  <p class="text-h4 text--primary">{{ noOfCaptions.caption2 }}</p>
+                </v-card-text>
+              </v-card>
+            </v-sheet>
+          </v-col>
+          <v-col cols="6" md="2">
+            <v-sheet rounded="lg">
+              <v-card height="150" class="mx-auto">
+                <v-card-text>
+                  <p class="text-h5"> Caption 3 </p>
+                  <p class="text-h4 text--primary">{{ noOfCaptions.caption3 }}</p>
+                </v-card-text>
+              </v-card>
+            </v-sheet>
+          </v-col>
+          <v-col cols="6" md="2">
+            <v-sheet rounded="lg">
+              <v-card height="150" class="mx-auto">
+                <v-card-text>
+                  <p class="text-h5"> Caption 4 </p>
+                  <p class="text-h4 text--primary">{{ noOfCaptions.caption4 }}</p>
+                </v-card-text>
+              </v-card>
+            </v-sheet>
+          </v-col>
+          <v-col cols="6" md="2">
+            <v-sheet rounded="lg">
+              <v-card height="150" class="mx-auto">
+                <v-card-text>
+                  <p class="text-h5"> Caption 5 </p>
+                  <p class="text-h4 text--primary">{{ noOfCaptions.caption5 }}</p>
                 </v-card-text>
               </v-card>
             </v-sheet>
@@ -36,6 +76,7 @@
         <v-row>
           <v-col>
             <v-sheet height="100%" width="100%" rounded="lg">
+<!--              <v-btn @click="downloadExcel()">Download</v-btn>-->
               <data-table title="New Captions" :dataObject="allNewCaptions"
                           :headers="newCaptionTableHeaders" :loading="newCaptionTableLoading"></data-table>
             </v-sheet>
@@ -58,6 +99,8 @@
 import DataTable from "./DataTable";
 import db from '../api/firebaseInit';
 
+const XLSX = require("xlsx");
+
 export default {
   name: "Dashboard",
   components: {DataTable},
@@ -65,17 +108,24 @@ export default {
     allNewCaptions: [],
     allCorrectedCaptions: [],
     noOfNewCaptions: 0,
+    noOfCaptions: {
+      caption1: 0,
+      caption2: 0,
+      caption3: 0,
+      caption4: 0,
+      caption5: 0,
+    },
     noOfCorrectedCaptions: 0,
     newCaptionTableLoading: false,
     correctedCaptionTableLoading: false,
     newCaptionTableHeaders: [
       {text: 'Image Id', value: 'imageId'},
       {text: 'Image Name', value: 'imageFileName'},
-      {text: 'Caption 1', value: 'caption1.caption'},
-      {text: 'Caption 2', value: 'caption2.caption'},
-      {text: 'Caption 3', value: 'caption3.caption'},
-      {text: 'Caption 4', value: 'caption4.caption'},
-      {text: 'Caption 5', value: 'caption5.caption'}
+      {text: 'Caption 1', value: 'caption1'},
+      {text: 'Caption 2', value: 'caption2'},
+      {text: 'Caption 3', value: 'caption3'},
+      {text: 'Caption 4', value: 'caption4'},
+      {text: 'Caption 5', value: 'caption5'}
     ],
     correctedCaptionTableHeaders: [
       {text: 'Image Id', value: 'imageId'},
@@ -106,13 +156,28 @@ export default {
                 tempObj = {
                   imageId: doc.data().imageId,
                   imageFileName: doc.data().imageFileName,
-                  caption1: doc.data().captionTags[0],
-                  caption2: doc.data().captionTags[1],
-                  caption3: doc.data().captionTags[2],
-                  caption4: doc.data().captionTags[3],
-                  caption5: doc.data().captionTags[4],
+                  caption1: doc.data().captionTags[0] ? doc.data().captionTags[0].caption : null,
+                  caption2: doc.data().captionTags[1] ? doc.data().captionTags[1].caption : null,
+                  caption3: doc.data().captionTags[2] ? doc.data().captionTags[2].caption : null,
+                  caption4: doc.data().captionTags[3] ? doc.data().captionTags[3].caption : null,
+                  caption5: doc.data().captionTags[4] ? doc.data().captionTags[4].caption : null,
                 };
                 this.allNewCaptions.push(tempObj);
+
+                if (doc.data().captionTags[0])
+                  this.noOfCaptions.caption1++;
+
+                if (doc.data().captionTags[1])
+                  this.noOfCaptions.caption2++;
+
+                if (doc.data().captionTags[2])
+                  this.noOfCaptions.caption3++;
+
+                if (doc.data().captionTags[3])
+                  this.noOfCaptions.caption4++;
+
+                if (doc.data().captionTags[4])
+                  this.noOfCaptions.caption5++;
               }
             });
             this.noOfNewCaptions = this.allNewCaptions.length;
@@ -154,6 +219,44 @@ export default {
             console.log("Error getting documents", err);
             this.correctedCaptionTableLoading = false;
           });
+    },
+
+    createArrayOfArrays({headers = [], data = []}) {
+
+      let arrayOfArrays = [];
+      arrayOfArrays.push(headers);
+
+      data.map((rowObj) => {
+        arrayOfArrays.push(Object.values(rowObj));
+        return null;
+      });
+      return arrayOfArrays;
+    },
+    downloadExcel() {
+      let ws_name = "SheetJS";
+
+      let wb = XLSX.utils.book_new();
+      let d = new Date();
+
+      let filename =
+          "report_" +
+          d
+              .toISOString()
+              .slice(0, 10)
+              .replace(/-/g, "") +
+          ".xlsx";
+
+      let data = this.createArrayOfArrays({
+        headers: ["imageId", "imageFileName", "caption1", "caption2", "caption3", "caption4", "caption5"],
+        data: this.allNewCaptions
+      });
+
+      let ws = XLSX.utils.aoa_to_sheet(data);
+
+      //   Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, ws_name);
+
+      XLSX.writeFile(wb, filename);
     }
   },
 };
